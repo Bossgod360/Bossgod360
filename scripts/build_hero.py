@@ -124,7 +124,7 @@ text{{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",m
 @keyframes rain{{to{{transform:translateY(var(--h))}}}}
 .glow{{animation:glow 6s ease-in-out infinite alternate}}
 @keyframes glow{{from{{opacity:.55}}to{{opacity:1}}}}
-@keyframes slide{{to{{transform:translateX(var(--w))}}}}
+@keyframes slide{{to{{transform:scaleX(0)}}}}
 .cursor{{opacity:0;animation:blink 1.1s steps(1) infinite}}
 @keyframes blink{{0%,49%{{opacity:1}}50%,100%{{opacity:0}}}}
 @media (prefers-reduced-motion:reduce){{.cover{{display:none}}.gx,.dp,.rain,.glow{{animation-play-state:paused}}.cursor{{animation:none;opacity:1}}}}
@@ -218,8 +218,9 @@ for i, (kind, segs) in enumerate(lines):
     a(f'<text class="t" x="{x0}" y="{y}" textLength="{n * CW:.1f}" lengthAdjust="spacing" xml:space="preserve">{inner}</text>')
     if STATIC_T is None:
         w = n * CW + 12
-        a(f'<rect class="cover" x="{x0 - 2}" y="{y - 15}" width="{w:.1f}" height="21" fill="{BG}" '
-          f'style="--w:{w:.1f}px;animation:slide {dur:.2f}s steps({max(n, 1)}) {t:.2f}s forwards"/>')
+        # the cover shrinks toward its right edge (never moves), so it can't hide the helix
+        a(f'<g transform="translate({x0 - 2 + w:.1f},{y - 15})"><rect class="cover" x="{-w:.1f}" y="0" width="{w:.1f}" height="21" fill="{BG}" '
+          f'style="transform-origin:0 0;animation:slide {dur:.2f}s steps({max(n, 1)}) {t:.2f}s forwards"/></g>')
     t += dur + (0.4 if kind == "cmd" else 0.18)
 a(f'<rect class="cursor" x="{x0 + 2 * CW}" y="{y_last - 12}" width="8" height="16" fill="#f2cc60" '
   f'style="animation-delay:{t:.2f}s{";opacity:1;animation:none" if STATIC_T is not None else ""}"/>')
