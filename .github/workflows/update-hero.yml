@@ -6,7 +6,7 @@ on:
   workflow_dispatch:         # the "Run workflow" button
   push:
     branches: [main]
-    paths: [profile.json, scripts/build_profile.py]
+    
 
 permissions:
   contents: write
