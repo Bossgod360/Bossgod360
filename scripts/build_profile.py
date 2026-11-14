@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Draws the profile SVGs in assets/ from profile.json + live GitHub data.
+"""Draws the profile cards in assets/ from profile.json + live GitHub data.
 
 GitHub Actions runs this every day (.github/workflows/update-hero.yml), so new
-repos, pushes, contributions and streaks show up on their own.
+repos, pushes, contributions and streaks appear on their own.
 Standard library only. Without GITHUB_TOKEN it uses sample data for previews:
     python scripts/build_profile.py
 """
@@ -20,55 +20,61 @@ ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "assets"
 FONTS = ASSETS / "fonts"
 
-BG = "#0A0D14"
-PANEL = "#0F131C"
-LINE = "#1E2633"
-TEXT = "#E6EAF2"
-MUTED = "#7A8496"
-DIM = "#3A4352"
-BLUE = "#4C8DFF"
-BLUE_DIM = "#1F3E78"
-RED = "#FF4B4B"
-RED_DIM = "#7A2328"
+# navy · cream · coral
+CREAM = "#F4EDE3"
+CREAM_2 = "#EBE2D4"
+RULE = "#DDD2C1"
+NAVY = "#1A2B55"
+NAVY_2 = "#2A4C88"
+INK = "#1A2B55"
+MUTED = "#6F7682"
+CORAL = "#FF4A2B"
+CORAL_DIM = "#A23A2E"
+CREAM_DIM = "#4F6394"
+HEAT = ["#E6DCCB", "#B9C4DE", "#6D86BC", "#24407E", CORAL]
 
 W = 840
 CH = 0.6  # IBM Plex Mono advance = 0.6em
 
-
-def font_css():
-    out = ""
-    for fam, f in (("M", "ibm-plex-mono-latin-400-normal.woff2"), ("MB", "ibm-plex-mono-latin-600-normal.woff2")):
-        b64 = base64.b64encode((FONTS / f).read_bytes()).decode()
-        out += f"@font-face{{font-family:'{fam}';src:url(data:font/woff2;base64,{b64}) format('woff2')}}"
-    return out + (".m{font-family:'M',ui-monospace,Menlo,Consolas,monospace;white-space:pre}"
-                  ".b{font-family:'MB',ui-monospace,Menlo,Consolas,monospace;white-space:pre}")
+FONT_FILES = {
+    "F": "fraunces-latin-400-normal.woff2",
+    "FI": "fraunces-latin-400-italic.woff2",
+    "M": "ibm-plex-mono-latin-400-normal.woff2",
+    "MB": "ibm-plex-mono-latin-600-normal.woff2",
+}
 
 
-def svg(w, h, body, css="", title=""):
+def svg(w, h, body, css="", title="", fonts=("F", "FI", "M", "MB")):
+    faces = "".join(
+        f"@font-face{{font-family:'{f}';src:url(data:font/woff2;base64,"
+        f"{base64.b64encode((FONTS / FONT_FILES[f]).read_bytes()).decode()}) format('woff2')}}" for f in fonts)
+    base = (".f{font-family:'F',Georgia,serif}.fi{font-family:'FI',Georgia,serif}"
+            ".m{font-family:'M',ui-monospace,Menlo,monospace;white-space:pre}"
+            ".mb{font-family:'MB',ui-monospace,Menlo,monospace;white-space:pre}")
     return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" '
             f'role="img" aria-label="{escape(title)}"><title>{escape(title)}</title>'
-            f"<style>{font_css()}{css}</style>{body}</svg>\n")
+            f"<style>{faces}{base}{css}</style>{body}</svg>\n")
 
 
-def window(w, h, title):
-    return (f'<rect x=".5" y=".5" width="{w-1}" height="{h-1}" rx="12" fill="{BG}" stroke="{LINE}"/>'
-            f'<path d="M1,36 H{w-1}" stroke="{LINE}"/>'
-            f'<circle cx="22" cy="18" r="5.5" fill="{RED}"/><circle cx="40" cy="18" r="5.5" fill="{BLUE}"/>'
-            f'<circle cx="58" cy="18" r="5.5" fill="{DIM}"/>'
-            f'<text x="{w/2}" y="22" class="m" font-size="11" fill="{MUTED}" text-anchor="middle">{escape(title)}</text>')
+def card(w, h, fill=CREAM, stroke=RULE):
+    return f'<rect x=".5" y=".5" width="{w-1}" height="{h-1}" rx="14" fill="{fill}" stroke="{stroke}"/>'
 
 
-def txt(x, y, s, size=13, fill=TEXT, cls="m", extra=""):
-    return f'<text x="{x}" y="{y}" class="{cls}" font-size="{size}" fill="{fill}" xml:space="preserve" {extra}>{s}</text>'
+def t(x, y, s, cls="m", size=11, fill=INK, anchor="start", extra=""):
+    return (f'<text x="{x}" y="{y}" class="{cls}" font-size="{size}" fill="{fill}" '
+            f'text-anchor="{anchor}" xml:space="preserve" {extra}>{s}</text>')
+
+
+def kicker(x, y, s, fill=MUTED, anchor="start"):
+    return t(x, y, escape(s.upper()), "mb", 9.5, fill, anchor, 'letter-spacing="1.8"')
 
 
 def ago(iso, now):
-    d = now - dt.datetime.fromisoformat(iso.replace("Z", "+00:00"))
-    s = d.total_seconds()
-    for unit, n in (("y", 31536000), ("mo", 2592000), ("d", 86400), ("h", 3600), ("m", 60)):
+    s = (now - dt.datetime.fromisoformat(iso.replace("Z", "+00:00"))).total_seconds()
+    for unit, n in ((" yr", 31536000), (" mo", 2592000), ("d", 86400), ("h", 3600), ("m", 60)):
         if s >= n:
-            return f"{int(s // n)}{unit}"
-    return "now"
+            return f"{int(s // n)}{unit} ago"
+    return "just now"
 
 
 # ------------------------------------------------------------------ data
@@ -178,12 +184,12 @@ def dna_frames(n_frames=40, rows=30, amp=12, twist=0.30):
     return frames, cols
 
 
-def dna_svg_group(x0, y0, size=11, lh=12.2, n_frames=40, period=4.8):
-    frames, cols = dna_frames(n_frames)
-    color = {"bA": BLUE, "dA": BLUE_DIM, "bB": RED, "dB": RED_DIM, "rA": "#9DB8E8", "rB": "#E89D9D"}
+def dna_group(x0, y0, size=10.5, lh=11.4, n_frames=40, period=5.0, rows=27):
+    frames, cols = dna_frames(n_frames, rows=rows, amp=12)
+    color = {"bA": CORAL, "dA": CORAL_DIM, "bB": CREAM, "dB": CREAM_DIM, "rA": "#FF9580", "rB": "#C3D0E8"}
     out = []
     for i, grid in enumerate(frames):
-        rows = []
+        lines = []
         for r, row in enumerate(grid):
             spans, cur, buf = [], None, ""
             for ch, cls, _ in row + [("", "END", 0)]:
@@ -193,147 +199,141 @@ def dna_svg_group(x0, y0, size=11, lh=12.2, n_frames=40, period=4.8):
                     buf = ""
                 cur = cls
                 buf += ch
-            rows.append(f'<text x="{x0}" y="{y0 + r*lh:.1f}" class="m" font-size="{size}" xml:space="preserve">{"".join(spans)}</text>')
+            lines.append(f'<text x="{x0:.1f}" y="{y0 + r*lh:.1f}" class="m" font-size="{size}" xml:space="preserve">{"".join(spans)}</text>')
         delay = -period * (n_frames - i) / n_frames
-        out.append(f'<g class="fr" style="animation-delay:{delay:.3f}s">{"".join(rows)}</g>')
+        out.append(f'<g class="fr" style="animation-delay:{delay:.3f}s">{"".join(lines)}</g>')
     css = (f".fr{{opacity:0;animation:fr {period}s steps(1,end) infinite}}"
            f"@keyframes fr{{0%{{opacity:1}}{100/n_frames:.3f}%{{opacity:0}}100%{{opacity:0}}}}")
     return "".join(out), css, cols * size * CH
 
 
-# ------------------------------------------------------------------ hero (terminal)
-def hero(p, data, today):
-    H = 452
-    now = dt.datetime.now(dt.timezone.utc)
-    hide = set(p.get("hide_repos", []))
-    repos = [r for r in data["repos"] if r["name"] not in hide]
-    total = sum(c for _, c in data["days"])
-    cur, longest = streaks(data["days"], today)
-    principle = p["principles"][today.toordinal() % len(p["principles"])]
+# ------------------------------------------------------------------ hero
+def hero(p):
+    H = 380
+    px, py, pw, ph = 548, 20, 272, 340  # navy panel
+    helix, hcss, hw = dna_group(px + (pw - 29 * 10.5 * CH) / 2, py + 34)
+    whoami_w = len("$ whoami") * 12 * CH
+    tag = "".join(t(40, 282 + i * 24, escape(s), "f", 17, INK) for i, s in enumerate(p["tagline"]))
+    body = f"""
+{card(W, H)}
+<clipPath id="type"><rect x="40" y="40" width="0" height="24">
+  <animate attributeName="width" from="0" to="{whoami_w + 2:.1f}" begin=".3s" dur=".6s" fill="freeze"/></rect></clipPath>
+<g clip-path="url(#type)">{t(40, 58, '<tspan fill="' + CORAL + '">$</tspan> whoami', "m", 12, MUTED)}</g>
+<rect x="{40 + whoami_w + 6:.1f}" y="47" width="7.2" height="14" fill="{CORAL}" class="cur"/>
+<g class="rise" style="animation-delay:1s">{t(34, 156, escape(p["first_name"]), "f", 96, NAVY, extra='letter-spacing="-2.5"')}</g>
+<g class="rise" style="animation-delay:1.2s">{t(34, 244, escape(p["last_name"]), "fi", 96, CORAL, extra='letter-spacing="-2.5"')}</g>
+<g class="fade" style="animation-delay:1.6s">{tag}{t(40, 344, escape(p["meta"]), "m", 11, MUTED, extra='letter-spacing=".4"')}</g>
 
-    size, lh, x0, y = 13, 21, 28, 66
-    lines = []  # (kind, content)
-    def cmd(s): lines.append(("cmd", s))
-    def out(s): lines.append(("out", s))
-
-    cmd("whoami")
-    out(f'<tspan class="b" fill="{TEXT}">{escape(p["name"])}</tspan><tspan fill="{MUTED}">  // {escape(p["role"])}</tspan>')
-    cmd("cat focus.txt")
-    for f in p["focus"]:
-        out(f'<tspan fill="{RED}">&gt; </tspan>{escape(f)}')
-    cmd("ls ~/repos --sort=recent | head -4")
-    for r in repos[:4]:
-        name = r["name"] if len(r["name"]) <= 30 else r["name"][:29] + "~"
-        lang = (r.get("primaryLanguage") or {}).get("name", "-")
-        lang = lang if len(lang) <= 10 else lang[:9] + "~"
-        out(f'<tspan fill="{BLUE}">{escape(name.ljust(31))}</tspan><tspan fill="{MUTED}">{escape(lang.ljust(11))}{ago(r["pushedAt"], now).rjust(4)}</tspan>')
-    cmd("./stats.sh")
-    streak = f"{cur}-day streak" if cur else f"best streak {longest}d"
-    out(f'<tspan fill="{TEXT}">{len(repos)}</tspan><tspan fill="{MUTED}"> repos . </tspan>'
-        f'<tspan fill="{TEXT}">{total}</tspan><tspan fill="{MUTED}"> contributions this year . </tspan>'
-        f'<tspan fill="{RED}">{streak}</tspan>')
-    cmd("echo $PRINCIPLE")
-    out(f'<tspan class="b" fill="{TEXT}">{escape(principle)}</tspan>')
-
-    body, t = [], 0.4
-    for kind, content in lines:
-        if kind == "cmd":
-            n = len(content)
-            wpx = (n + 2) * size * CH + 2
-            cid = f"c{len(body)}"
-            body.append(f'<clipPath id="{cid}"><rect x="{x0}" y="{y-15}" width="{size*CH*2}" height="20">'
-                        f'<animate attributeName="width" from="{size*CH*2}" to="{wpx:.1f}" begin="{t:.2f}s" dur="{n*0.045:.2f}s" fill="freeze"/></rect></clipPath>'
-                        f'<g opacity="0"><set attributeName="opacity" to="1" begin="{t-0.15:.2f}s" fill="freeze"/>'
-                        f'<g clip-path="url(#{cid})">{txt(x0, y, f"<tspan fill=\"{RED}\">$</tspan> {escape(content)}", size)}</g></g>')
-            t += n * 0.045 + 0.25
-        else:
-            body.append(f'<g opacity="0"><set attributeName="opacity" to="1" begin="{t:.2f}s" fill="freeze"/>'
-                        f'{txt(x0, y, content, size, TEXT)}</g>')
-            t += 0.12
-        y += lh
-    # prompt with blinking cursor
-    body.append(f'<g opacity="0"><set attributeName="opacity" to="1" begin="{t:.2f}s" fill="freeze"/>'
-                f'{txt(x0, y, f"<tspan fill=\"{RED}\">$</tspan>", size)}'
-                f'<rect x="{x0 + 2*size*CH}" y="{y-12}" width="{size*CH:.1f}" height="15" fill="{BLUE}" class="cur"/></g>')
-
-    dx, dy = 598, 66
-    helix, hcss, hw = dna_svg_group(dx, dy)
-    deco = (txt(dx + hw / 2, 438, "~/dna --spin", 10, DIM, extra='text-anchor="middle"')
-            + f'<path d="M574,52 V420" stroke="{LINE}"/>')
-    css = hcss + ".cur{animation:blink 1.1s steps(1) infinite}@keyframes blink{50%{opacity:0}}"
-    return svg(W, H, window(W, H, f"{p['name'].split()[0]}@{p['github_user'].lower()}: ~") + "".join(body) + helix + deco,
-               css, title=f"{p['name']} - {p['role']}")
+<rect x="{px}" y="{py}" width="{pw}" height="{ph}" rx="10" fill="{NAVY}"/>
+<clipPath id="panel"><rect x="{px}" y="{py}" width="{pw}" height="{ph}" rx="10"/></clipPath>
+<g clip-path="url(#panel)">{helix}</g>
+{t(px + 16, py + 22, "~/dna --spin", "m", 9.5, "#8EA2CF")}
+<circle cx="{px + pw - 20}" cy="{py + 18}" r="3.5" fill="{CORAL}" class="pulse"/>
+"""
+    css = hcss + """
+.cur{animation:blink 1.1s steps(1) infinite}@keyframes blink{50%{opacity:0}}
+.rise{opacity:0;animation:rise .9s cubic-bezier(.2,.7,.2,1) forwards}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.fade{opacity:0;animation:fade 1s ease forwards}@keyframes fade{to{opacity:1}}
+.pulse{animation:pulse 2s ease-in-out infinite}@keyframes pulse{50%{opacity:.25}}
+"""
+    return svg(W, H, body, css, title=f"{p['first_name']} {p['last_name']}")
 
 
-# ------------------------------------------------------------------ activity (ASCII heatmap)
+# ------------------------------------------------------------------ track record
+def track_record(p):
+    rows = p["track_record"]
+    top, rh = 88, 58
+    H = top + rh * len(rows) + 14
+    out = []
+    for i, r in enumerate(rows):
+        y = top + i * rh
+        out.append(t(40, y + 26, escape(r["when"]), "m", 10.5, MUTED)
+                   + t(132, y + 25, escape(r["title"]), "f", 18, INK)
+                   + t(132, y + 45, escape(r["sub"]), "f", 13.5, MUTED)
+                   + t(W - 40, y + 26, escape(r["tag"].upper()), "mb", 9, CORAL, "end", 'letter-spacing="1.6"'))
+        if i < len(rows) - 1:
+            out.append(f'<line x1="40" x2="{W-40}" y1="{y+rh}" y2="{y+rh}" stroke="{RULE}"/>')
+    body = f"""
+{card(W, H)}
+<text x="40" y="56" class="f" font-size="28" fill="{INK}">Track record, <tspan class="fi" fill="{CORAL}">so far</tspan></text>
+{kicker(W-40, 52, "research · build · lead", anchor="end")}
+<line x1="40" x2="{W-40}" y1="{top}" y2="{top}" stroke="{INK}" stroke-width="1.2"/>
+{''.join(out)}
+"""
+    return svg(W, H, body, title="Track record")
+
+
+# ------------------------------------------------------------------ activity
 def activity(days, today):
-    ramp = ".:+*#"
+    H = 214
+    cell, gap = 11, 3
+    pitch = cell + gap
     weeks = []
     for d, c in sorted(days):
         if not weeks or d.weekday() == 6:
             weeks.append([])
         weeks[-1].append((d, c))
-    weeks = weeks[-52:]
-    peak = max((c for _, c in days), default=1) or 1
-    pitch, x0, y0 = 14.6, 34, 78
-    H = 230
-    cells = []
+    weeks = weeks[-53:]
+    peak = max((c for _, c in days), default=0) or 1
+    x0, y0 = (W - len(weeks) * pitch + gap) // 2, 84
+    rects, months, last = [], [], None
     for wi, wk in enumerate(weeks):
+        x = x0 + wi * pitch
         for d, c in wk:
-            r = (d.weekday() + 1) % 7
-            if c == 0:
-                ch, fill = ".", DIM
-            else:
-                lvl = min(4, 1 + int(3 * c / peak + .25))
-                ch, fill = ramp[lvl], [BLUE_DIM, BLUE, BLUE, "#8DB6FF", RED][lvl]
-            cells.append(f'<tspan x="{x0 + wi*pitch:.1f}" y="{y0 + r*16}" fill="{fill}">{escape(ch)}</tspan>')
-    months, last = [], None
-    for wi, wk in enumerate(weeks):
-        m = wk[0][0].month
-        if m != last and x0 + wi * pitch < W - 120:
-            months.append(txt(x0 + wi * pitch, y0 + 7 * 16 + 8, wk[0][0].strftime("%b").lower(), 10, MUTED))
-            last = m
+            lvl = 0 if not c else min(4, 1 + int(3 * c / peak + .25))
+            rects.append(f'<rect x="{x}" y="{y0 + ((d.weekday()+1) % 7)*pitch}" width="{cell}" height="{cell}" rx="2.5" fill="{HEAT[lvl]}"/>')
+        if wk[0][0].month != last and x < W - 190:
+            months.append(t(x, 198, wk[0][0].strftime("%b"), "m", 9, MUTED))
+            last = wk[0][0].month
+    legend = t(W - 152, 198, "less", "m", 9, MUTED, "end")
+    legend += "".join(f'<rect x="{W-146+i*14}" y="189" width="10" height="10" rx="2" fill="{c}"/>' for i, c in enumerate(HEAT))
+    legend += t(W - 74, 198, "more", "m", 9, MUTED)
     total = sum(c for _, c in days)
-    head = (txt(28, 60, f'<tspan fill="{RED}">$</tspan> git log --since="1 year" | heatmap', 13)
-            + txt(W - 28, 60, f"{total} contributions", 11, MUTED, extra='text-anchor="end"'))
-    legend = txt(W - 28, H - 12, f'less <tspan fill="{DIM}">.</tspan> <tspan fill="{BLUE_DIM}">:</tspan> '
-                 f'<tspan fill="{BLUE}">+ *</tspan> <tspan fill="#8DB6FF">#</tspan> <tspan fill="{RED}">#</tspan> more',
-                 10, MUTED, extra='text-anchor="end"')
-    scan = (f'<rect x="{x0-6}" y="{y0-14}" width="12" height="{7*16+2}" fill="{BLUE}" opacity=".10">'
-            f'<animate attributeName="x" from="{x0-6}" to="{x0 + len(weeks)*pitch - 6:.0f}" dur="7s" repeatCount="indefinite"/></rect>')
-    body = (window(W, H, "activity") + head + scan
-            + f'<text class="m" font-size="13" xml:space="preserve">{"".join(cells)}</text>' + "".join(months) + legend)
+    cur, longest = streaks(days, today)
+    right = f"{total} contributions · " + (f"{cur}-day streak" if cur else f"best streak {longest}d")
+    scan = (f'<rect y="{y0-3}" width="{pitch}" height="{7*pitch+3}" rx="3" fill="{CORAL}" opacity=".18">'
+            f'<animate attributeName="x" from="{x0-2}" to="{x0 + len(weeks)*pitch - 2}" dur="8s" repeatCount="indefinite"/></rect>')
+    body = f"""
+{card(W, H)}
+<text x="40" y="56" class="f" font-size="28" fill="{INK}">Every day, <tspan class="fi" fill="{CORAL}">a little further</tspan></text>
+{t(W-40, 52, escape(right), "m", 10.5, MUTED, "end")}
+{''.join(rects)}{scan}{''.join(months)}{legend}
+"""
     return svg(W, H, body, title=f"{total} contributions in the last year")
 
 
-# ------------------------------------------------------------------ repos (ls -la, self-updating)
-def repos_card(p, data):
+# ------------------------------------------------------------------ repos (self-updating)
+def repos_card(p, repos):
     now = dt.datetime.now(dt.timezone.utc)
     hide = set(p.get("hide_repos", []))
-    repos = [r for r in data["repos"] if r["name"] not in hide][:8]
-    rh, top = 26, 84
-    H = top + rh * len(repos) + 8
-    rows = []
+    repos = [r for r in repos if r["name"] not in hide][:6]
+    top, rh = 88, 40
+    H = top + rh * len(repos) + 14
+    out = []
     for i, r in enumerate(repos):
         y = top + i * rh
-        lang = r.get("primaryLanguage") or {"name": "-", "color": DIM}
-        name = r["name"] if len(r["name"]) <= 30 else r["name"][:29] + "~"
-        desc = (r.get("description") or "").strip() or "-"
-        desc = desc if len(desc) <= 36 else desc[:35] + "~"
-        rows.append(
-            f'<g class="row" style="animation-delay:{0.15 + i*0.09:.2f}s">'
-            + txt(28, y, f'<tspan fill="{BLUE}">{escape(name)}</tspan>', 13)
-            + txt(292, y, escape(desc), 12, MUTED)
-            + f'<circle cx="{604}" cy="{y-4.5}" r="4" fill="{lang["color"] or DIM}"/>'
-            + txt(614, y, escape(lang["name"][:12]), 12, MUTED)
-            + txt(736, y, f'*{r["stargazerCount"]}', 12, RED if r["stargazerCount"] else DIM)
-            + txt(W - 28, y, ago(r["pushedAt"], now), 12, MUTED, extra='text-anchor="end"')
-            + "</g>")
-    head = (txt(28, 60, f'<tspan fill="{RED}">$</tspan> ls -la ~/repos', 13)
-            + txt(W - 28, 60, f"{len(repos)} shown . auto-updated daily", 11, MUTED, extra='text-anchor="end"'))
+        lang = r.get("primaryLanguage") or {"name": "", "color": RULE}
+        name = r["name"] if len(r["name"]) <= 30 else r["name"][:29] + "…"
+        desc = (r.get("description") or "").strip()
+        desc = desc if len(desc) <= 40 else desc[:39].rstrip() + "…"
+        out.append(f'<g class="row" style="animation-delay:{.1 + i*.08:.2f}s">'
+                   + t(40, y + 26, escape(name), "mb", 12.5, NAVY)
+                   + t(300, y + 26, escape(desc), "fi", 14, MUTED)
+                   + f'<circle cx="632" cy="{y+22}" r="4" fill="{lang["color"] or RULE}"/>'
+                   + t(642, y + 26, escape(lang["name"][:11]), "m", 10.5, INK)
+                   + t(W - 40, y + 26, ago(r["pushedAt"], now), "m", 10.5, MUTED, "end") + "</g>")
+        if i < len(repos) - 1:
+            out.append(f'<line x1="40" x2="{W-40}" y1="{y+rh}" y2="{y+rh}" stroke="{RULE}"/>')
+    body = f"""
+{card(W, H)}
+<text x="40" y="56" class="f" font-size="28" fill="{INK}">Recently <tspan class="fi" fill="{CORAL}">shipped</tspan></text>
+{kicker(W-40, 52, "auto-updated daily", anchor="end")}
+<line x1="40" x2="{W-40}" y1="{top}" y2="{top}" stroke="{INK}" stroke-width="1.2"/>
+{''.join(out)}
+"""
     css = ".row{opacity:0;animation:in .5s ease forwards}@keyframes in{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}"
-    return svg(W, H, window(W, H, "~/repos") + head + f'<path d="M28,{top-17} H{W-28}" stroke="{LINE}"/>' + "".join(rows),
-               css, title="My repositories, most recently updated first")
+    return svg(W, H, body, css, title="My most recently updated repositories")
 
 
 def main():
@@ -343,8 +343,8 @@ def main():
     data = fetch(p["github_user"], token) if token else sample(today)
     if not token:
         print("No GITHUB_TOKEN: using sample data (preview only).")
-    out = {"hero.svg": hero(p, data, today), "activity.svg": activity(data["days"], today),
-           "repos.svg": repos_card(p, data)}
+    out = {"hero.svg": hero(p), "track-record.svg": track_record(p),
+           "activity.svg": activity(data["days"], today), "repos.svg": repos_card(p, data["repos"])}
     ASSETS.mkdir(exist_ok=True)
     for name, content in out.items():
         (ASSETS / name).write_text(content, encoding="utf-8")

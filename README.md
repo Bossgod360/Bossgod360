@@ -1,19 +1,21 @@
 <!--
-  Drawn by scripts/build_profile.py from profile.json + live GitHub data.
-  Rebuilt every day by .github/workflows/update-hero.yml, so new repos,
-  pushes, contributions and streaks appear on their own.
-  Edit profile.json to change your text or add principles.
+  Drawn by scripts/build_profile.py from profile.json + live GitHub data,
+  rebuilt daily by .github/workflows/update-hero.yml. New repos, pushes,
+  contributions and streaks appear on their own. Edit profile.json for text.
 -->
 
-<a href="https://aryankhimani.com"><img src="./assets/hero.svg" width="100%" alt="whoami: Aryan Khimani, CS x biology builder, beside a spinning ASCII DNA helix"></a>
+<a href="https://aryankhimani.com"><img src="./assets/hero.svg" width="100%" alt="Aryan Khimani. Computer Science & Business at Western (Ivey). I build ML for biology, and against misinformation."></a>
 
-<img src="./assets/activity.svg" width="100%" alt="My GitHub activity over the last year, drawn in ASCII">
+<img src="./assets/track-record.svg" width="100%" alt="Track record: TruthLens, Western Founders Network, Okamoto Lab at Mount Sinai, JoeyHelps, Youreka">
 
-<a href="https://github.com/Bossgod360?tab=repositories"><img src="./assets/repos.svg" width="100%" alt="My repositories, most recently updated first"></a>
+<img src="./assets/activity.svg" width="100%" alt="My GitHub contributions over the last year">
+
+<a href="https://github.com/Bossgod360?tab=repositories"><img src="./assets/repos.svg" width="100%" alt="My most recently updated repositories"></a>
 
 <p align="center">
-  <a href="https://aryankhimani.com"><code>aryankhimani.com</code></a> &nbsp;·&nbsp;
-  <!-- TODO: add your LinkedIn and uncomment:
-  <a href="https://www.linkedin.com/in/YOUR-HANDLE"><code>linkedin</code></a> &nbsp;·&nbsp; -->
-  <a href="https://github.com/Bossgod360?tab=repositories"><code>all repos</code></a>
+  <code>python · pytorch · tensorflow · opencv · react · fastapi · docker</code>
+  <br><br>
+  <a href="https://aryankhimani.com">aryankhimani.com</a> &nbsp;·&nbsp;
+  <a href="https://www.linkedin.com/in/aryan-khimani">linkedin</a> &nbsp;·&nbsp;
+  <a href="https://github.com/Bossgod360?tab=repositories">all repos</a>
 </p>

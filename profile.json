@@ -1,19 +1,26 @@
 {
   "github_user": "Bossgod360",
-  "name": "aryan khimani",
-  "role": "cs x biology . builder",
-  "focus": [
-    "vision models that read living things",
-    "co-founder @ JoeyHelps, CraftNova"
+  "first_name": "Aryan",
+  "last_name": "Khimani",
+  "tagline": [
+    "Computer Science & Business at Western (Ivey).",
+    "I build ML for biology, and against misinformation."
   ],
-  "principles": [
-    "Specific knowledge. Long games. Ship daily.",
-    "Small things, shipped daily, compound.",
-    "Read the source. Then write your own.",
-    "Build in public. Let the work speak.",
-    "Curiosity is the unfair advantage.",
-    "Less talk. More commits."
+  "meta": "toronto, on  ·  aryankhimani.com",
+  "website": "aryankhimani.com",
+
+  "track_record": [
+    { "when": "2025 –",  "title": "Building TruthLens",
+      "sub": "Explainable misinformation detection with RoBERTa + RAG", "tag": "building" },
+    { "when": "2025 –",  "title": "Director, Western Founders Network",
+      "sub": "Ran Western's largest tech case competition, 200+ students", "tag": "leading" },
+    { "when": "2024",    "title": "Research intern, Okamoto Lab · Mount Sinai",
+      "sub": "Computer-vision pipelines that track mice with SLEAP", "tag": "research" },
+    { "when": "2022–23", "title": "Co-founder, JoeyHelps",
+      "sub": "Deloitte-sponsored mental-health platform for Gen Z", "tag": "founder" },
+    { "when": "2022–23", "title": "Youreka genetics study",
+      "sub": "RNA-seq trauma analysis · regional winner, national finalist", "tag": "research" }
   ],
-  "hide_repos": ["Bossgod360"],
-  "website": "aryankhimani.com"
+
+  "hide_repos": ["Bossgod360"]
 }
