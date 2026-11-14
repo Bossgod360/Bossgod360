@@ -8,9 +8,9 @@
 
 <img src="./assets/track-record.svg?v=8977bad8" width="100%" alt="Track record: TruthLens, Western Founders Network, Okamoto Lab at Mount Sinai, JoeyHelps, Youreka">
 
-<img src="./assets/activity.svg?v=ee418661" width="100%" alt="My GitHub contributions over the last year">
+<img src="./assets/activity.svg?v=7f890f21" width="100%" alt="My GitHub contributions over the last year">
 
-<a href="https://github.com/Bossgod360?tab=repositories"><img src="./assets/repos.svg?v=8432b0c9" width="100%" alt="My most recently updated repositories"></a>
+<a href="https://github.com/Bossgod360?tab=repositories"><img src="./assets/repos.svg?v=84561ea2" width="100%" alt="My most recently updated repositories"></a>
 
 <p align="center">
   <code>python · pytorch · tensorflow · opencv · react · fastapi · docker</code>
