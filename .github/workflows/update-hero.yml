@@ -1,18 +1,18 @@
-name: Update hero banner
+name: Update profile
 
 on:
   schedule:
-    - cron: "17 5 * * *"
-  workflow_dispatch:
+    - cron: "17 5 * * *"   # every day
+  workflow_dispatch:         # the "Run workflow" button
   push:
     branches: [main]
-    paths: [profile.json, scripts/build_hero.py]
+    paths: [profile.json, scripts/build_profile.py]
 
 permissions:
   contents: write
 
 concurrency:
-  group: update-hero
+  group: update-profile
   cancel-in-progress: true
 
 jobs:
@@ -26,18 +26,18 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Build hero.svg from your latest repos
-        run: python scripts/build_hero.py
+      - name: Draw the cards from live GitHub data
+        run: python scripts/build_profile.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Commit if it changed
+      - name: Commit if anything changed
         run: |
-          if [ -n "$(git status --porcelain hero.svg)" ]; then
+          if [ -n "$(git status --porcelain assets)" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add hero.svg
-            git commit -m "chore: refresh hero banner"
+            git add assets
+            git commit -m "chore: refresh profile"
             git pull --rebase
             git push
           fi
