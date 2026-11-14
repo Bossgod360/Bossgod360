@@ -138,72 +138,100 @@ def streaks(days, today):
 
 
 # ------------------------------------------------------------------ ASCII DNA
-def dna_frames(n_frames=40, rows=30, amp=12, twist=0.30):
-    """Rotating double helix, shaded by depth like the classic spinning donut."""
-    ramp = ".,:;+=*#%@"          # far -> near
-    cols = amp * 2 + 5
+def dna_frames(n_frames=36, cols=56, rows=36, cw=4.8, lh=8.4):
+    """A 3D double helix: tube strands and base-pair rungs, lit and depth-shaded
+    like the classic spinning ASCII donut, tilted on a diagonal and spinning."""
+    ramp = ".,-~:;=!*#$@"
+    turns, length, R, tube, rung_r = 1.3, 10.0, 2.0, 0.33, 0.1
+    omega = 2 * math.pi * turns / length
+    tilt, lean = math.radians(-30), math.radians(8)  # angle in screen plane, toward viewer
+    K2 = 14.0
+    K1 = 370.0                                     # px scale
+    L = (-0.45, 0.55, -0.70)
+    ln = math.sqrt(sum(c * c for c in L)); L = tuple(c / ln for c in L)
+    ct, st, cl, sl = math.cos(tilt), math.sin(tilt), math.cos(lean), math.sin(lean)
+
+    def xf(x, y, z):            # lean (about x) then tilt (about z)
+        y, z = y * cl - z * sl, y * sl + z * cl
+        return x * ct - y * st, x * st + y * ct, z
+
     frames = []
     for f in range(n_frames):
         phi = 2 * math.pi * f / n_frames
-        grid = [[(" ", None, -9.0) for _ in range(cols)] for _ in range(rows)]
+        zbuf = [[-1.0] * cols for _ in range(rows)]
+        grid = [[(" ", None)] * cols for _ in range(rows)]
 
-        def put(r, c, ch, cls, z):
-            if 0 <= r < rows and 0 <= c < cols and z > grid[r][c][2]:
-                grid[r][c] = (ch, cls, z)
+        def plot(p, nrm, strand):
+            x, y, z = xf(*p)
+            nx, ny, nz = xf(*nrm)
+            ooz = 1 / (K2 + z)
+            col = int(cols / 2 + K1 * x * ooz / cw)
+            row = int(rows / 2 - K1 * y * ooz / lh)
+            if 0 <= row < rows and 0 <= col < cols and ooz > zbuf[row][col]:
+                zbuf[row][col] = ooz
+                lum = nx * L[0] + ny * L[1] + nz * L[2]
+                ch = ramp[max(0, min(len(ramp) - 1, int((lum + 0.15) / 1.15 * len(ramp))))]
+                near = z < 0.2
+                grid[row][col] = (ch, strand + ("1" if near else "2"))
 
-        def shade(z):
-            return ramp[max(0, min(len(ramp) - 1, int((z + 1) / 2 * len(ramp))))]
-
-        # strands: sample finely so fast-moving parts stay continuous, 2 chars thick
-        steps = rows * 8
+        steps = 700
         for i in range(steps + 1):
-            rf = i / 8
-            r = round(rf)
-            th = rf * twist + phi
-            for k, (hot, cold) in enumerate((("bA", "dA"), ("bB", "dB"))):
-                a = th + k * math.pi
-                x, z = math.cos(a), math.sin(a)
-                cx = cols / 2 - .5 + x * amp
-                cls = hot if z > -0.25 else cold
-                put(r, round(cx), shade(z), cls, z + 0.02)
-                put(r, round(cx + (1 if x < 0 else -1) * 0.9), shade(z - 0.35), cls, z - 0.01)
-        # base pairs every row: blue half meets red half at the middle
-        for r in range(rows):
-            th = r * twist + phi
-            ca, za = cols / 2 - .5 + math.cos(th) * amp, math.sin(th)
-            cb, zb = cols / 2 - .5 - math.cos(th) * amp, -math.sin(th)
-            a_, b_ = round(ca), round(cb)
-            step = 1 if b_ > a_ else -1
-            for c in range(a_ + step, b_, step):
-                t = (c - a_) / (b_ - a_)
-                z = za + (zb - za) * t
-                if r % 2 == 0:
-                    cls = ("rA" if t < .5 else "rB") if z > -0.3 else ("dA" if t < .5 else "dB")
-                    put(r, c, "-" if abs(z) < .5 else ("=" if z > 0 else "."), cls, z - 0.2)
+            s = -length / 2 + length * i / steps
+            for k, strand in ((0, "a"), (1, "b")):
+                th = omega * s + phi + k * math.pi
+                c = (R * math.cos(th), s, R * math.sin(th))
+                n1 = (math.cos(th), 0.0, math.sin(th))
+                T = (-R * omega * math.sin(th), 1.0, R * omega * math.cos(th))
+                tn = math.sqrt(sum(v * v for v in T)); T = tuple(v / tn for v in T)
+                n2 = (T[1] * n1[2] - T[2] * n1[1], T[2] * n1[0] - T[0] * n1[2], T[0] * n1[1] - T[1] * n1[0])
+                for u in range(24):
+                    a = 2 * math.pi * u / 24
+                    nrm = tuple(math.cos(a) * n1[j] + math.sin(a) * n2[j] for j in range(3))
+                    plot(tuple(c[j] + tube * nrm[j] for j in range(3)), nrm, strand)
+        n_rungs = 16
+        for m in range(n_rungs):
+            s = -length / 2 + length * (m + .5) / n_rungs
+            th = omega * s + phi
+            A = (R * math.cos(th), s, R * math.sin(th))
+            B = (-A[0], s, -A[2])
+            e1, e2 = (0.0, 1.0, 0.0), (-math.sin(th), 0.0, math.cos(th))
+            for i in range(1, 40):
+                t = i / 40
+                c = tuple(A[j] + (B[j] - A[j]) * t for j in range(3))
+                for u in range(10):
+                    a = 2 * math.pi * u / 10
+                    nrm = tuple(math.cos(a) * e1[j] + math.sin(a) * e2[j] for j in range(3))
+                    plot(tuple(c[j] + rung_r * nrm[j] for j in range(3)), nrm, "p" if t < .5 else "q")
         frames.append(grid)
     return frames, cols
 
 
-def dna_group(x0, y0, size=10.5, lh=11.4, n_frames=40, period=5.0, rows=27):
-    frames, cols = dna_frames(n_frames, rows=rows, amp=12)
-    color = {"bA": CORAL, "dA": CORAL_DIM, "bB": CREAM, "dB": CREAM_DIM, "rA": "#FF9580", "rB": "#C3D0E8"}
+ICE = "#9CC2FF"
+DNA_COLORS = {"a1": CORAL, "a2": "#A8382A", "b1": ICE, "b2": "#4A68A6",
+              "p1": "#FF8C75", "p2": "#7A3A36", "q1": "#C9DAFF", "q2": "#3E5585"}
+
+
+def dna_group(x0, y0, n_frames=36, period=6.0):
+    frames, cols = dna_frames(n_frames)
+    size, lh = 8, 8.4
     out = []
     for i, grid in enumerate(frames):
         lines = []
         for r, row in enumerate(grid):
             spans, cur, buf = [], None, ""
-            for ch, cls, _ in row + [("", "END", 0)]:
+            for ch, cls in row + [("", "END")]:
                 if cls != cur and buf:
-                    fill = f' fill="{color[cur]}"' if cur else ""
-                    spans.append(f"<tspan{fill}>{escape(buf)}</tspan>")
+                    spans.append(f'<tspan class="{cur}">{escape(buf)}</tspan>' if cur else buf)
                     buf = ""
                 cur = cls
                 buf += ch
-            lines.append(f'<text x="{x0:.1f}" y="{y0 + r*lh:.1f}" class="m" font-size="{size}" xml:space="preserve">{"".join(spans)}</text>')
+            if spans:
+                lines.append(f'<text x="{x0:.1f}" y="{y0 + r*lh:.1f}" class="m" font-size="{size}" xml:space="preserve">{"".join(spans)}</text>')
         delay = -period * (n_frames - i) / n_frames
         out.append(f'<g class="fr" style="animation-delay:{delay:.3f}s">{"".join(lines)}</g>')
     css = (f".fr{{opacity:0;animation:fr {period}s steps(1,end) infinite}}"
-           f"@keyframes fr{{0%{{opacity:1}}{100/n_frames:.3f}%{{opacity:0}}100%{{opacity:0}}}}")
+           f"@keyframes fr{{0%{{opacity:1}}{100/n_frames:.3f}%{{opacity:0}}100%{{opacity:0}}}}"
+           + "".join(f".{k}{{fill:{v}}}" for k, v in DNA_COLORS.items()))
     return "".join(out), css, cols * size * CH
 
 
@@ -211,7 +239,7 @@ def dna_group(x0, y0, size=10.5, lh=11.4, n_frames=40, period=5.0, rows=27):
 def hero(p):
     H = 380
     px, py, pw, ph = 548, 20, 272, 340  # navy panel
-    helix, hcss, hw = dna_group(px + (pw - 29 * 10.5 * CH) / 2, py + 34)
+    helix, hcss, hw = dna_group(px + (pw - 56 * 8 * CH) / 2, py + 34)
     whoami_w = len("$ whoami") * 12 * CH
     tag = "".join(t(40, 282 + i * 24, escape(s), "f", 17, INK) for i, s in enumerate(p["tagline"]))
     body = f"""
