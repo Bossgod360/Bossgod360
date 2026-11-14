@@ -1,12 +1,19 @@
 {
   "github_user": "Bossgod360",
-  "headline": "Bossgod360 · builder · CS + ML",
-  "now": [
-    "vision models for animal behaviour (SLEAP)",
-    "CNNs that read blood-cell images",
-    "small things, shipped daily, compounding"
+  "name": "aryan khimani",
+  "role": "cs x biology . builder",
+  "focus": [
+    "vision models that read living things",
+    "co-founder @ JoeyHelps, CraftNova"
   ],
-  "principle": "Specific knowledge. Long games. Ship.",
-  "recent_count": 4,
-  "helix_seconds": 8
+  "principles": [
+    "Specific knowledge. Long games. Ship daily.",
+    "Small things, shipped daily, compound.",
+    "Read the source. Then write your own.",
+    "Build in public. Let the work speak.",
+    "Curiosity is the unfair advantage.",
+    "Less talk. More commits."
+  ],
+  "hide_repos": ["Bossgod360"],
+  "website": "aryankhimani.com"
 }
