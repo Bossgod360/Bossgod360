@@ -2,11 +2,10 @@ name: Update profile
 
 on:
   schedule:
-    - cron: "17 5 * * *"   # every day
-  workflow_dispatch:         # the "Run workflow" button
+    - cron: "17 */4 * * *"   # every 4 hours: picks up new repos, pushes and contributions
+  workflow_dispatch:           # the "Run workflow" button
   push:
-    branches: [main]
-    
+    branches: [main]           # any upload you make redraws everything right away
 
 permissions:
   contents: write
@@ -33,10 +32,10 @@ jobs:
 
       - name: Commit if anything changed
         run: |
-          if [ -n "$(git status --porcelain assets)" ]; then
+          if [ -n "$(git status --porcelain assets README.md)" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add assets
+            git add assets README.md
             git commit -m "chore: refresh profile"
             git pull --rebase
             git push
