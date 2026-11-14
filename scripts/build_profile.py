@@ -377,6 +377,21 @@ def main():
     for name, content in out.items():
         (ASSETS / name).write_text(content, encoding="utf-8")
         print(f"wrote assets/{name} ({len(content)//1024} KB)")
+    bust_cache(out)
+
+
+def bust_cache(out):
+    """Give every image link in README.md a version tag that changes whenever
+    the image changes, so browsers and GitHub's image cache never show an old copy."""
+    import hashlib
+    import re
+    readme = ROOT / "README.md"
+    text = readme.read_text(encoding="utf-8")
+    for name, content in out.items():
+        v = hashlib.sha1(content.encode()).hexdigest()[:8]
+        text = re.sub(rf"\./assets/{re.escape(name)}(\?v=\w+)?", f"./assets/{name}?v={v}", text)
+    readme.write_text(text, encoding="utf-8")
+    print("README.md image links versioned")
 
 
 if __name__ == "__main__":
