@@ -4,11 +4,11 @@
   contributions and streaks appear on their own. Edit profile.json for text.
 -->
 
-<a href="https://aryankhimani.com"><img src="./assets/hero.svg?v=6696bf4d" width="100%" alt="Aryan Khimani. Computer Science & Business at Western (Ivey). I build ML for biology, and against misinformation."></a>
+<a href="https://aryankhimani.com"><img src="./assets/hero.svg?v=6c8771e6" width="100%" alt="Aryan Khimani. Computer Science & Business at Western (Ivey). I build ML for biology, and against misinformation."></a>
 
 <img src="./assets/track-record.svg?v=8977bad8" width="100%" alt="Track record: TruthLens, Western Founders Network, Okamoto Lab at Mount Sinai, JoeyHelps, Youreka">
 
-<img src="./assets/activity.svg?v=7f890f21" width="100%" alt="My GitHub contributions over the last year">
+<img src="./assets/activity.svg?v=22a38a41" width="100%" alt="My GitHub contributions over the last year">
 
 <a href="https://github.com/Bossgod360?tab=repositories"><img src="./assets/repos.svg?v=84561ea2" width="100%" alt="My most recently updated repositories"></a>
 
